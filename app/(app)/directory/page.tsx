@@ -163,7 +163,7 @@ return (
       >
     Manage Groups
     </Link>
-    </>>
+    </>
     )}
   </div>
   </div>

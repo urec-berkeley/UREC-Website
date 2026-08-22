@@ -1,4 +1,4 @@
-mport { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { getCurrentCourse, getIsExec } from "@/lib/data/queries";
 import Link from "next/link";
 import {

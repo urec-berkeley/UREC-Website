@@ -168,6 +168,12 @@ before(async () => {
        values ('aaaaaaaa-0000-0000-0000-000000000001',$1,'secret plans')`,
     [STU],
   );
+
+    // A guest email exec has already approved, for is_allowed_guest checks.
+    await db.query(
+          `insert into public.guest_allowlist (email, invited_by) values ('guest@gmail.com', $1)`,
+          [EXEC],
+        );
 });
 
 after(async () => {
@@ -591,7 +597,7 @@ test("exec can add an email to the guest allowlist", async () => {
   const r = await tryAsUser(
     db,
     EXEC,
-    `insert into public.guest_allowlist (email, invited_by) values ('guest@gmail.com', $1)`,
+    `insert into public.guest_allowlist (email, invited_by) values ('newguest@gmail.com', $1)`,
     [EXEC],
     );
   assert.equal(r.ok, true, r.error);

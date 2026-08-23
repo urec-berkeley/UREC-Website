@@ -168,6 +168,12 @@ before(async () => {
        values ('aaaaaaaa-0000-0000-0000-000000000001',$1,'secret plans')`,
     [STU],
   );
+
+    // A guest email exec has already approved, for is_allowed_guest checks.
+    await db.query(
+          `insert into public.guest_allowlist (email, invited_by) values ('guest@gmail.com', $1)`,
+          [EXEC],
+        );
 });
 
 after(async () => {
@@ -584,4 +590,57 @@ test("quiz_review returns NOTHING to a member who has NOT submitted", async () =
     `select count(*)::int n from public.quiz_review('11111111-0000-0000-0000-000000000001')`,
   );
   assert.equal(r.rows[0].n, 0, "answers must stay hidden until the member submits");
+});
+
+// ---- Guest allowlist (non-@berkeley.edu sign-in exceptions, 20260821010000) ----
+test("exec can add an email to the guest allowlist", async () => {
+  const r = await tryAsUser(
+    db,
+    EXEC,
+    `insert into public.guest_allowlist (email, invited_by) values ('newguest@gmail.com', $1)`,
+    [EXEC],
+    );
+  assert.equal(r.ok, true, r.error);
+});
+
+test("a non-exec member cannot write the guest allowlist", async () => {
+  const r = await tryAsUser(
+    db,
+    STU,
+    `insert into public.guest_allowlist (email, invited_by) values ('sneaky@gmail.com', $1)`,
+    [STU],
+    );
+  assert.equal(r.ok, false, "only exec should be able to invite a guest email");
+});
+
+test("a non-exec member cannot read the guest allowlist table directly", async () => {
+  const r = await tryAsUser(db, STU, `select count(*)::int n from public.guest_allowlist`);
+  assert.equal(r.rows[0].n, 0, "the roster of guest emails itself stays exec-only");
+});
+
+test("is_allowed_guest is true for an invited email, regardless of who's asking", async () => {
+  const r = await tryAsUser(
+    db,
+    OUTSIDER,
+    `select public.is_allowed_guest('guest@gmail.com') as allowed`,
+    );
+  assert.equal(r.rows[0].allowed, true);
+});
+
+test("is_allowed_guest is false for anything not on the list", async () => {
+  const r = await tryAsUser(
+    db,
+    OUTSIDER,
+    `select public.is_allowed_guest('nobody-invited-me@gmail.com') as allowed`,
+    );
+  assert.equal(r.rows[0].allowed, false);
+});
+
+test("is_allowed_guest matches case-insensitively", async () => {
+  const r = await tryAsUser(
+    db,
+    OUTSIDER,
+    `select public.is_allowed_guest('Guest@Gmail.com') as allowed`,
+    );
+  assert.equal(r.rows[0].allowed, true);
 });

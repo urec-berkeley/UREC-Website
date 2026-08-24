@@ -265,3 +265,144 @@ if (groupId) {
 
 revalidatePath("/directory/groups");
 }
+
+// ============ GUEST INVITE SYSTEM ============
+
+import crypto from 'crypto';
+
+// Generate a secure random token for invites
+function generateInviteToken(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Create an invite for a guest
+export async function createInvite(
+  _prev: { error?: string },
+  formData: FormData
+): Promise<{ error?: string; inviteId?: string }> {
+  const guestEmail = formData.get('guest_email') as string;
+  const courseId = formData.get('course_id') as string;
+
+  if (!guestEmail || !courseId) {
+    return { error: 'Missing email or course' };
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(guestEmail)) {
+    return { error: 'Invalid email format' };
+  }
+
+  try {
+    const supabase = createClient();
+    
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      return { error: 'Not authenticated' };
+    }
+
+    const { data: execCheck } = await supabase
+      .rpc('is_exec')
+      .single();
+    
+    if (!execCheck) {
+      return { error: 'Only exec can create invites' };
+    }
+
+    const token = generateInviteToken();
+    const { data: invite, error } = await supabase
+      .from('invites')
+      .insert({
+        guest_email: guestEmail.toLowerCase(),
+        course_id: courseId,
+        invited_by: userData.user.id,
+        token,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    console.log(`Invite link: ${process.env.NEXT_PUBLIC_APP_URL}/accept-invite?token=${token}`);
+
+    revalidatePath('/directory');
+    return { inviteId: invite.id };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : 'Failed to create invite',
+    };
+  }
+}
+
+// Get pending invites for a course
+export async function getPendingInvites(courseId: string) {
+  try {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+      .from('invites')
+      .select('id, guest_email, created_at, expires_at, status')
+      .eq('course_id', courseId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return { invites: data || [] };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Failed to fetch invites' };
+  }
+}
+
+// Remove an invite
+export async function removeInvite(
+  _prev: { error?: string },
+  formData: FormData
+): Promise<{ error?: string }> {
+  const inviteId = formData.get('invite_id') as string;
+
+  try {
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from('invites')
+      .delete()
+      .eq('id', inviteId);
+
+    if (error) return { error: error.message };
+
+    revalidatePath('/directory');
+    return {};
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : 'Failed to remove invite',
+    };
+  }
+}
+
+// Accept an invite (during guest signup)
+export async function acceptInvite(
+  token: string
+): Promise<{ error?: string; guestEmail?: string; courseId?: string }> {
+  try {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+      .rpc('accept_invite', { invite_token: token })
+      .single();
+
+    if (error) {
+      return { error: 'Invalid or expired invite' };
+    }
+
+    return {
+      guestEmail: data.guest_email,
+      courseId: data.course_id,
+    };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : 'Failed to accept invite',
+    };
+  }
+}

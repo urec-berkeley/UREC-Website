@@ -9,6 +9,9 @@ import {
   removePending,
 } from "./actions";
 import { ConfirmSubmitButton } from "../ui/form-controls";
+import { InviteForm } from "./invite-form";
+import { InviteList } from "./invite-list";
+
 import { EnrollForm } from "./enroll-form";
 import { SectionAssignForm } from "./section-assign-form";
 

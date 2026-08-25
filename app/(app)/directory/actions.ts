@@ -279,7 +279,7 @@ function generateInviteToken(): string {
 export async function createInvite(
   _prev: { error?: string },
   formData: FormData
-): Promise<{ error?: string; inviteId?: string }> {
+): Promise<{ error?: string; inviteId?: string; inviteLink?: string }> {
   const guestEmail = formData.get('guest_email') as string;
   const courseId = formData.get('course_id') as string;
 
@@ -324,10 +324,26 @@ export async function createInvite(
       return { error: error.message };
     }
 
-    console.log(`Invite link: ${process.env.NEXT_PUBLIC_APP_URL}/accept-invite?token=${token}`);
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://urec-website.vercel.app';
+    const inviteLink = `${appUrl}/accept-invite?token=${token}`;
+
+    if (process.env.RESEND_API_KEY) {
+      const { Resend } = await import('resend');
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: 'UREC <noreply@urec-website.vercel.app>',
+        to: guestEmail.toLowerCase(),
+        subject: 'You\'ve been invited to join an UREC course',
+        html: `<p>You've been invited to join an UREC course.</p>
+<p><a href="${inviteLink}">Click here to accept your invite</a></p>
+<p>This link expires in 7 days.</p>`,
+      });
+    } else {
+      console.log(`[INVITE] Link for ${guestEmail}: ${inviteLink}`);
+    }
 
     revalidatePath('/directory');
-    return { inviteId: invite.id };
+    return { inviteId: invite.id, inviteLink };
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : 'Failed to create invite',

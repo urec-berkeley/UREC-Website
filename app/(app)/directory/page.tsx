@@ -10,7 +10,6 @@ import {
 } from "./actions";
 import { ConfirmSubmitButton } from "../ui/form-controls";
 import { InviteForm } from "./invite-form";
-import { InviteList } from "./invite-list";
 
 import { EnrollForm } from "./enroll-form";
 import { SectionAssignForm } from "./section-assign-form";
@@ -395,7 +394,6 @@ return (
         Invite non-Berkeley email users to join the course. They'll receive an email with a signup link.
       </p>
       <InviteForm courseId={course.id} />
-      <InviteList courseId={course.id} />
     </div>
   )}
   </div>

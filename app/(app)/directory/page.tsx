@@ -385,6 +385,19 @@ return (
     </ul>
     </div>
   )}
+
+  {isExec && course && (
+    <div className="mt-10">
+      <h2 className="border-b border-hair pb-1 text-sm font-bold text-navy-deep">
+        Send Guest Invites
+      </h2>
+      <p className="mt-2 text-xs text-muted">
+        Invite non-Berkeley email users to join the course. They'll receive an email with a signup link.
+      </p>
+      <InviteForm courseId={course.id} />
+      <InviteList courseId={course.id} />
+    </div>
+  )}
   </div>
   );
 }

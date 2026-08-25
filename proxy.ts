@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const ALLOWED_EMAIL_DOMAIN = "@berkeley.edu";
-const PUBLIC_PATHS = ["/", "/login"];
+const PUBLIC_PATHS = ["/", "/login", "/accept-invite", "/accept-invite/complete"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

@@ -2,62 +2,62 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { acceptInvite } from '@/app/(app)/directory/actions';
+import { createClient } from '@/lib/supabase/client';
 
 function AcceptInviteContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  const [state, setState] = useState<{ error?: string; success?: boolean }>({});
-  const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    async function handleAccept() {
-      if (!token) {
-        setState({ error: 'No invite token provided' });
-        setLoading(false);
-        return;
-      }
-
-      const result = await acceptInvite(token);
-      if (result.error) {
-        setState({ error: result.error });
-      } else {
-        setState({ success: true });
-      }
-      setLoading(false);
+    if (token) {
+      sessionStorage.setItem('invite_token', token);
     }
-
-    handleAccept();
   }, [token]);
 
-  if (loading) {
-    return <div className="p-8 text-center">Validating invite...</div>;
+  async function handleSignIn() {
+    setPending(true);
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/accept-invite/complete`,
+      },
+    });
   }
 
-  if (state.error) {
+  if (!token) {
     return (
-      <div className="max-w-md mx-auto p-8">
-        <div className="p-4 bg-red-50 text-red-700 rounded-lg">
-          {state.error}
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-sm">
+          <h1 className="text-xl font-bold text-gray-900">Invalid Invite</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            No invite token was provided. Please check the link you received.
+          </p>
         </div>
-        <p className="mt-4 text-sm text-gray-600">
-          Please contact the course administrator for a new invite.
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-sm">
+        <h1 className="text-xl font-bold text-gray-900">
+          You&rsquo;ve been invited to UREC
+        </h1>
+        <p className="mt-2 text-sm text-gray-600">
+          Sign in with Google to accept your course invitation.
         </p>
+        <button
+          onClick={handleSignIn}
+          disabled={pending}
+          className="mt-6 w-full rounded-md bg-blue-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+        >
+          {pending ? 'Redirecting to Google…' : 'Sign in with Google'}
+        </button>
       </div>
-    );
-  }
-
-  if (state.success) {
-    return (
-      <div className="max-w-md mx-auto p-8">
-        <div className="p-4 bg-green-50 text-green-700 rounded-lg">
-          ✓ Invite accepted! Redirecting to signup...
-        </div>
-      </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }
 
 export default function AcceptInvitePage() {

@@ -308,6 +308,13 @@ export async function createInvite(
       return { error: 'Only exec can create invites' };
     }
 
+    const admin = createAdminClient();
+    const { error: guestError } = await admin.from("guest_allowlist").upsert(
+      [{ email: guestEmail.toLowerCase(), invited_by: userData.user.id }],
+      { onConflict: "email", ignoreDuplicates: true },
+    );
+    if (guestError) return { error: guestError.message };
+
     const token = generateInviteToken();
     const { data: invite, error } = await supabase
       .from('invites')

@@ -396,9 +396,10 @@ export async function acceptInvite(
       return { error: 'Invalid or expired invite' };
     }
 
+    const row = data as { guest_email: string; course_id: string };
     return {
-      guestEmail: data.guest_email,
-      courseId: data.course_id,
+      guestEmail: row.guest_email,
+      courseId: row.course_id,
     };
   } catch (error) {
     return {

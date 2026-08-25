@@ -49,8 +49,8 @@ export async function getAllUsers(): Promise<AdminData> {
 
   return {
     users: (users ?? []) as AdminData["users"],
-    accountRoles: (accountRoles ?? []) as AdminData["accountRoles"],
-    enrollments: (enrollments ?? []) as AdminData["enrollments"],
+    accountRoles: (accountRoles ?? []) as unknown as AdminData["accountRoles"],
+    enrollments: (enrollments ?? []) as unknown as AdminData["enrollments"],
     roles: (roles ?? []) as AdminData["roles"],
     courses: (courses ?? []) as AdminData["courses"],
   };

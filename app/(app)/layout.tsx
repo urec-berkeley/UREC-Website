@@ -117,7 +117,7 @@ export default async function AppLayout({
             <Mail className="h-5 w-5" strokeWidth={1.75} />
           </RailLink>
           {isExec && (
-            <RailLink href="/courses" label="Admin">
+            <RailLink href="/admin" label="Admin">
               <Settings className="h-5 w-5" strokeWidth={1.75} />
             </RailLink>
           )}

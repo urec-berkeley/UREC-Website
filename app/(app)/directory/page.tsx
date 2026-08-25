@@ -26,6 +26,7 @@ type EnrollmentRow = {
   major: string | null;
   grad_year: number | null;
   linkedin_url: string | null;
+  account_roles: { role: { name: string } | null }[];
   } | null;
 };
 type PendingRow = {
@@ -70,7 +71,8 @@ const supabase = await createClient();
     .from("enrollments")
     .select(
       `id, role:roles(name), section:course_sections(id, name),
-      user:users(id, email, full_name, pronouns, major, grad_year, linkedin_url)`,
+      user:users(id, email, full_name, pronouns, major, grad_year, linkedin_url,
+        account_roles(role:roles(name)))`,
       )
     .eq("course_id", course.id)
     : Promise.resolve({ data: [], error: null }),
@@ -278,7 +280,7 @@ return (
         <span className="whitespace-nowrap text-xs text-muted">{r.section.name}</span>
       )}
       <span className="whitespace-nowrap rounded-full border border-hair px-3 py-1 text-xs font-medium tracking-wide text-navy">
-        {r.role?.name ?? "Member"}
+        {r.user!.account_roles?.[0]?.role?.name ?? r.role?.name ?? "Member"}
       </span>
         {isExec && sections.length > 0 && (
         <SectionAssignForm

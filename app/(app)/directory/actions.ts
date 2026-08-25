@@ -331,7 +331,7 @@ export async function createInvite(
       const { Resend } = await import('resend');
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: 'UREC <noreply@urec-website.vercel.app>',
+        from: 'UREC <onboarding@resend.dev>',
         to: guestEmail.toLowerCase(),
         subject: 'You\'ve been invited to join an UREC course',
         html: `<p>You've been invited to join an UREC course.</p>

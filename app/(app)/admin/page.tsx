@@ -26,37 +26,23 @@ export default async function AdminPage({
   }
 
   const { users, accountRoles, enrollments, roles } = result;
-  const accountScopedRoles = (roles ?? []).filter((r: { scope: string }) => r.scope === "account");
+  const accountScopedRoles = roles.filter((r) => r.scope === "account");
 
-  type AccountRoleRow = {
-    user_id: string;
-    role_id: string;
-    role: { id: string; name: string } | null;
-  };
-  type EnrollmentRow = {
-    user_id: string;
-    course_id: string;
-    role_id: string;
-    role: { name: string } | null;
-    course: { name: string; code: string | null } | null;
-  };
-
-  const arByUser = new Map<string, AccountRoleRow[]>();
-  for (const ar of (accountRoles ?? []) as AccountRoleRow[]) {
+  const arByUser = new Map<string, typeof accountRoles>();
+  for (const ar of accountRoles) {
     const list = arByUser.get(ar.user_id) ?? [];
     list.push(ar);
     arByUser.set(ar.user_id, list);
   }
 
-  const enByUser = new Map<string, EnrollmentRow[]>();
-  for (const en of (enrollments ?? []) as EnrollmentRow[]) {
+  const enByUser = new Map<string, typeof enrollments>();
+  for (const en of enrollments) {
     const list = enByUser.get(en.user_id) ?? [];
     list.push(en);
     enByUser.set(en.user_id, list);
   }
 
-  type UserRow = { id: string; email: string; full_name: string | null; created_at: string };
-  let filteredUsers = (users ?? []) as UserRow[];
+  let filteredUsers = [...users];
 
   if (filter === "exec") {
     filteredUsers = filteredUsers.filter((u) => arByUser.has(u.id));
@@ -72,7 +58,7 @@ export default async function AdminPage({
     );
   }
 
-  const totalUsers = (users ?? []).length;
+  const totalUsers = users.length;
   const execCount = arByUser.size;
 
   return (

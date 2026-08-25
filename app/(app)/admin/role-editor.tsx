@@ -4,11 +4,13 @@ import { useActionState, useState } from "react";
 import { assignAccountRole, removeAccountRole } from "./actions";
 
 type AccountRole = {
+  user_id: string;
   role_id: string;
   role: { id: string; name: string } | null;
 };
 
 type Enrollment = {
+  user_id: string;
   course_id: string;
   role_id: string;
   role: { name: string } | null;
@@ -16,10 +18,10 @@ type Enrollment = {
 };
 
 type UserCardProps = {
-  user: { id: string; email: string; full_name: string | null; created_at: string };
+  user: { id: string; email: string; full_name: string | null; avatar_url: string | null; created_at: string };
   accountRoles: AccountRole[];
   enrollments: Enrollment[];
-  allAccountRoles: { id: string; name: string }[];
+  allAccountRoles: { id: string; name: string; scope: string }[];
 };
 
 export function UserCard({ user, accountRoles, enrollments, allAccountRoles }: UserCardProps) {

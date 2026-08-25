@@ -5,8 +5,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getIsExec } from "@/lib/data/queries";
 import { revalidatePath } from "next/cache";
 
-export async function getAllUsers() {
-  if (!(await getIsExec())) return { error: "Only exec can view all users." };
+type AdminData = {
+  error?: string;
+  users: { id: string; email: string; full_name: string | null; avatar_url: string | null; created_at: string }[];
+  accountRoles: { user_id: string; role_id: string; role: { id: string; name: string } | null }[];
+  enrollments: { user_id: string; course_id: string; role_id: string; role: { name: string } | null; course: { name: string; code: string | null } | null }[];
+  roles: { id: string; name: string; scope: string }[];
+  courses: { id: string; name: string; code: string | null }[];
+};
+
+export async function getAllUsers(): Promise<AdminData> {
+  const empty: AdminData = { users: [], accountRoles: [], enrollments: [], roles: [], courses: [] };
+
+  if (!(await getIsExec())) return { ...empty, error: "Only exec can view all users." };
 
   const admin = createAdminClient();
 
@@ -34,14 +45,14 @@ export async function getAllUsers() {
   ]);
 
   const err = usersErr || arErr || enErr || rolesErr || coursesErr;
-  if (err) return { error: err.message };
+  if (err) return { ...empty, error: err.message };
 
   return {
-    users: users ?? [],
-    accountRoles: accountRoles ?? [],
-    enrollments: enrollments ?? [],
-    roles: roles ?? [],
-    courses: courses ?? [],
+    users: (users ?? []) as AdminData["users"],
+    accountRoles: (accountRoles ?? []) as AdminData["accountRoles"],
+    enrollments: (enrollments ?? []) as AdminData["enrollments"],
+    roles: (roles ?? []) as AdminData["roles"],
+    courses: (courses ?? []) as AdminData["courses"],
   };
 }
 

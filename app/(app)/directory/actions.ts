@@ -327,20 +327,22 @@ export async function createInvite(
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://urec-website.vercel.app';
     const inviteLink = `${appUrl}/accept-invite?token=${token}`;
 
-    if (process.env.RESEND_API_KEY) {
-      const { Resend } = await import('resend');
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: 'UREC <onboarding@resend.dev>',
-        to: guestEmail.toLowerCase(),
-        subject: 'You\'ve been invited to join an UREC course',
-        html: `<p>You've been invited to join an UREC course.</p>
-<p><a href="${inviteLink}">Click here to accept your invite</a></p>
-<p>This link expires in 7 days.</p>`,
-      });
-    } else {
-      console.log(`[INVITE] Link for ${guestEmail}: ${inviteLink}`);
-    }
+    // Email sending requires a verified domain in Resend. Uncomment
+    // once a domain is added at resend.com/domains and update the
+    // `from` address to noreply@yourdomain.com.
+    //
+    // if (process.env.RESEND_API_KEY) {
+    //   const { Resend } = await import('resend');
+    //   const resend = new Resend(process.env.RESEND_API_KEY);
+    //   await resend.emails.send({
+    //     from: 'UREC <noreply@yourdomain.com>',
+    //     to: guestEmail.toLowerCase(),
+    //     subject: 'You\'ve been invited to join an UREC course',
+    //     html: `<p>You've been invited to join an UREC course.</p>
+    //       <p><a href="${inviteLink}">Click here to accept your invite</a></p>
+    //       <p>This link expires in 7 days.</p>`,
+    //   });
+    // }
 
     revalidatePath('/directory');
     return { inviteId: invite.id, inviteLink };

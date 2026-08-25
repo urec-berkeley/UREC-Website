@@ -20,6 +20,7 @@ export function InviteForm({ courseId }: InviteFormProps) {
   const [removeState, removeAction] = useActionState(removeInvite, {});
   const [invites, setInvites] = useState<Invite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   async function loadInvites() {
     const result = await getPendingInvites(courseId);
@@ -29,10 +30,15 @@ export function InviteForm({ courseId }: InviteFormProps) {
 
   useEffect(() => { loadInvites(); }, [courseId]);
 
-  // Refresh list after a new invite is created or removed
   useEffect(() => {
     if (createState.inviteId || removeState) loadInvites();
   }, [createState.inviteId, removeState]);
+
+  async function copyLink(link: string) {
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   return (
     <div>
@@ -46,15 +52,24 @@ export function InviteForm({ courseId }: InviteFormProps) {
         )}
         {createState.inviteLink && (
           <div className="mb-3 rounded-md bg-green-50 p-3 text-sm text-green-700">
-            ✓ Invite sent! Share this link if email doesn&rsquo;t arrive:{' '}
-            <a
-              href={createState.inviteLink}
-              className="underline break-all"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {createState.inviteLink}
-            </a>
+            <p className="font-medium">Invite created! Send this link to the guest:</p>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={createState.inviteLink}
+                className="flex-1 rounded border border-green-300 bg-white px-2 py-1 text-xs text-text"
+                onFocus={(e) => e.target.select()}
+              />
+              <button
+                type="button"
+                onClick={() => copyLink(createState.inviteLink!)}
+                className="whitespace-nowrap rounded-md bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700"
+              >
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
+            </div>
+            <p className="mt-1.5 text-xs text-green-600">Expires in 7 days.</p>
           </div>
         )}
 

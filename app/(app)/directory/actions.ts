@@ -293,8 +293,8 @@ export async function createInvite(
   }
 
   try {
-    const supabase = createClient();
-    
+    const supabase = await createClient();
+
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) {
       return { error: 'Not authenticated' };
@@ -338,7 +338,7 @@ export async function createInvite(
 // Get pending invites for a course
 export async function getPendingInvites(courseId: string) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('invites')
@@ -363,7 +363,7 @@ export async function removeInvite(
   const inviteId = formData.get('invite_id') as string;
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { error } = await supabase
       .from('invites')
@@ -386,7 +386,7 @@ export async function acceptInvite(
   token: string
 ): Promise<{ error?: string; guestEmail?: string; courseId?: string }> {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .rpc('accept_invite', { invite_token: token })
